@@ -84,7 +84,7 @@ function CabinRow({ cabin }) {
         {discount ? (
           <Discount>{formatCurrency(discount)}</Discount>
         ) : (
-          <span>&mdash</span>
+          <span>&ndash;</span>
         )}
         <div>
           <button onClick={handleDuplicate} disabled={isCreating}>

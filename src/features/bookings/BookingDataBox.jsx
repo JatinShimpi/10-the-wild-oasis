@@ -134,7 +134,7 @@ function BookingDataBox({ booking }) {
           {isToday(new Date(startDate))
             ? "Today"
             : formatDistanceFromNow(startDate)}
-          ) &mdash; {format(new Date(endDate), "EEE, MMM dd yyyy")}
+          ) &ndash; {format(new Date(endDate), "EEE, MMM dd yyyy")}
         </p>
       </Header>
 
