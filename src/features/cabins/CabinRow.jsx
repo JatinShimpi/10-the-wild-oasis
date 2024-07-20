@@ -6,7 +6,6 @@ import { HiPencil, HiSquare2Stack, HiTrash } from "react-icons/hi2";
 import { useCreateCabin } from "./useCreateCabin";
 import Modal from "../../ui/Modal";
 import ConfirmDelete from "../../ui/ConfirmDelete";
-import Cabins from "../../pages/Cabins";
 import Table from "../../ui/Table";
 import Menus from "../../ui/Menus";
 
@@ -77,7 +76,7 @@ function CabinRow({ cabin }) {
   return (
     <>
       <Table.Row>
-        <img src={image} />
+        <Img src={image} />
         <Cabin>{name}</Cabin>
         <div>Fits up to {maxCapacity} guests</div>
         <Price>{formatCurrency(regularPrice)}</Price>
@@ -95,6 +94,7 @@ function CabinRow({ cabin }) {
                 <Menus.Button
                   icon={<HiSquare2Stack />}
                   onClick={handleDuplicate}
+                  disabled={isCreating}
                 >
                   Duplicate
                 </Menus.Button>

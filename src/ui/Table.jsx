@@ -1,14 +1,14 @@
 import { createContext, useContext } from "react";
 import styled from "styled-components";
 
-const StyledTable = styled.div`
-  border: 1px solid var(--color-grey-200);
+// const StyledTable = styled.div`
+//   border: 1px solid var(--color-grey-200);
 
-  font-size: 1.4rem;
-  background-color: var(--color-grey-0);
-  border-radius: 7px;
-  overflow: hidden;
-`;
+//   font-size: 1.4rem;
+//   background-color: var(--color-grey-0);
+//   border-radius: 7px;
+//   overflow: hidden;
+// `;
 
 const CommonRow = styled.div`
   display: grid;
