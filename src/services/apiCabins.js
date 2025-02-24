@@ -1,70 +1,93 @@
+import { API_BASE_URL } from "../utils/constants";
 import supabase, { supabaseUrl } from "./supabase";
+import axios from "axios";
 
 export async function getCabins() {
-  const { data, error } = await supabase.from("cabins").select("*");
-
-  if (error) {
-    console.log(error);
+  try {
+    const { data } = await axios.get(`${API_BASE_URL}/cabins/get-all-cabins`, {
+      withCredentials: true,
+    });
+    return data;
+  } catch (error) {
+    console.error("Error fetching cabins:", error.response?.data || error);
     throw new Error("Cabins could not be loaded");
   }
-
-  return data;
 }
 
-export async function createEditCabin(newCabin, id) {
-  console.log(newCabin, id);
+export async function createCabin(newCabin) {
+  try {
+    const formData = new FormData();
+    formData.append("cabinImage", newCabin.image);
+    formData.append("cabinNum", newCabin.name);
+    formData.append("price", newCabin.regularPrice);
+    formData.append("discount", newCabin.discount);
+    formData.append("description", newCabin.description);
+    formData.append("capacity", newCabin.maxCapacity);
 
-  const hasImagePath = newCabin.image?.startsWith?.(supabaseUrl);
-
-  const imageName = `${Math.random()}-${newCabin.image.name0}`.replaceAll(
-    "/",
-    ""
-  );
-  const imagePath = hasImagePath
-    ? newCabin.image
-    : `${supabaseUrl}/storage/v1/object/public/cabim-images/${imageName}`;
-
-  //1. create the cabin
-  let query = supabase.from("cabins");
-
-  // A) CREATE
-  if (!id) query = query.insert([{ ...newCabin, image: imagePath }]);
-
-  // B) EDIT
-  if (id) query = query.update({ ...newCabin, image: imagePath }).eq("id", id);
-
-  const { data, error } = await query.select().single();
-
-  if (error) {
-    console.error(error);
-    throw new Error("cabin could not be created");
-  }
-
-  //2 upload the image
-  if (hasImagePath) return data;
-  const { error: StorageError } = await supabase.storage
-    .from("cabim-images")
-    .upload(imageName, newCabin.image);
-
-  //3. Delete the CAbin if there was an error uploading image
-  if (StorageError) {
-    await supabase.from("cabins".delete().eq("id", data.id));
-    console.error(StorageError);
-    throw new Error(
-      "cabin image could not be uploaded and the cabin could not be created"
+    const { data } = await axios.post(
+      `${API_BASE_URL}/cabins/create-cabin`,
+      formData,
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
+      }
     );
+    return data;
+  } catch (error) {
+    console.error("Error creating cabin:", error.response?.data || error);
+    throw new Error("Cabin could not be created");
   }
+}
 
-  return data;
+export async function getCabinById(id) {
+  try {
+    const { data } = await axios.get(`${API_BASE_URL}/cabins/${id}`, {
+      withCredentials: true,
+    });
+    return data;
+  } catch (error) {
+    console.error("Error fetching cabin:", error.response?.data || error);
+    throw new Error("Cabin could not be loaded");
+  }
+}
+
+
+//i am so fucking stupid man i spent almost 2 hours on this🤦🤔 i was passing updatedcabin in the id and videverca 
+export async function updateCabin(updatedCabin,id) {
+
+  try {
+    const formData = new FormData();
+    if (updatedCabin.image) {
+      formData.append("cabinImage", updatedCabin.image);
+    }
+    formData.append("cabinNum", updatedCabin.name);
+    formData.append("price", updatedCabin.regularPrice);
+    formData.append("discount", updatedCabin.discount);
+    formData.append("description", updatedCabin.description);
+    formData.append("capacity", updatedCabin.maxCapacity);
+
+    const { data } = await axios.patch(
+      `${API_BASE_URL}/cabins/${id}`,
+      formData,
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+    return data;
+  } catch (error) {
+    console.error("Error updating cabin:", error.response?.data || error);
+    throw new Error("Cabin could not be updated");
+  }
 }
 
 export async function deleteCabin(id) {
-  const { data, error } = await supabase.from("cabins").delete().eq("id", id);
-
-  if (error) {
-    console.error(error);
-    throw new Error("cabin could not be deleted");
+  try {
+    await axios.delete(`${API_BASE_URL}/cabins/${id}`, {
+      withCredentials: true,
+    });
+  } catch (error) {
+    console.error("Error deleting cabin:", error.response?.data || error);
+    throw new Error("Cabin could not be deleted");
   }
-
-  return data;
 }

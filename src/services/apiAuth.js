@@ -3,7 +3,29 @@ import supabase, { supabaseUrl } from "./supabase";
 import axios from "axios";
 
 
-//TODO write all the api endpoints for your custom api  2/5
+//TODO write all the api endpoints for your custom api  3/6
+
+async function refreshAccessToken() {
+  //done
+  try {
+    const { data } = await axios.post(
+      `${API_BASE_URL}/users/refresh-token`,
+      {},
+      { withCredentials: true }
+    );
+    return data?.data ?? null;
+  } catch (error) {
+    console.error(
+      "Error refreshing access token:",
+      error.response?.data || error
+    );
+    return null;
+  }
+}
+
+const data = refreshAccessToken()
+console.log(data)
+
 
 export async function login({ email, password }) {
   //done
@@ -21,6 +43,7 @@ export async function login({ email, password }) {
 }
 
 export async function signup({ fullName, username, email, password }) {
+  //done
   try {
     const { data } = await axios.post(
       `${API_BASE_URL}/users/register`,
@@ -34,19 +57,34 @@ export async function signup({ fullName, username, email, password }) {
 }
 
 export async function getCurrentUser() {
-  // done
+  //done
   try {
-    const { data } = await axios.get(
-      `${API_BASE_URL}/users/current-user`,
-      {
-        withCredentials: true,
-      }
-    );
-
-    console.log(data);
-    //swear to god spend so much time here finally figured it was fetching nonexisti=ent fiedl from the response 🤦
+    const { data } = await axios.get(`${API_BASE_URL}/users/current-user`, {
+      withCredentials: true,
+    });
     return data?.data ?? null;
   } catch (error) {
+    if (error.response?.status === 401) {
+      console.warn("Access token expired, attempting to refresh...");
+      const newAccessToken = await refreshAccessToken();
+      if (newAccessToken) {
+        try {
+          // No need to include Authorization header, as the cookie handles it
+          const { data } = await axios.get(
+            `${API_BASE_URL}/users/current-user`,
+            {
+              withCredentials: true,
+            }
+          );
+          return data?.data ?? null;
+        } catch (retryError) {
+          console.error(
+            "Error retrying user fetch after token refresh:",
+            retryError.response?.data || retryError
+          );
+        }
+      }
+    }
     console.error(
       "Error fetching current user:",
       error.response?.data || error
@@ -55,38 +93,49 @@ export async function getCurrentUser() {
   }
 }
 
+
 export async function logout() {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw new Error(error.message);
+  //done
+  try {
+    await axios.post(
+      `${API_BASE_URL}/users/logout`,
+      {},
+      { withCredentials: true }
+    );
+    console.log("User logged out successfully");
+  } catch (error) {
+    console.error("Error logging out:", error.response?.data || error);
+  }
 }
 
-export async function updateCurrentUser({ password, fullName, avatar }) {
-  //1. update the password or fullname
-  let updateData;
-  if (password) updateData = { password };
-  if (fullName) updateData = { data: { fullName } };
+export async function updateCurrentUser({ password, fullName, email, avatar }) {
+  try {
+    if (password) {
+      await axios.post(
+        `${API_BASE_URL}/users/change-password`,
+        { password },
+        { withCredentials: true }
+      );
+    }
 
-  const { data, error } = await supabase.auth.updateUser(updateData);
+    if (fullName || email) {
+      await axios.patch(
+        `${API_BASE_URL}/users/update-account`,
+        { fullName, email },
+        { withCredentials: true }
+      );
+    }
 
-  if (error) throw new Error(error.message);
-  if (!avatar) return data;
-
-  //2. upload the avatar image
-  const fileName = `avatar-${data.user.id}-${Math.random()}`;
-
-  const { error: storageError } = await supabase.storage
-    .from("avatars")
-    .upload(fileName, avatar);
-
-  if (storageError) throw new Error(error.message);
-
-  //3. update avatar in the user
-  const { data: updatedUser, error: error2 } = await supabase.auth.updateUser({
-    data: {
-      avatar: `${supabaseUrl}/storage/v1/object/public/avatars/${fileName}`,
-    },
-  });
-
-  if (error) throw new Error(error2.message);
-  return updatedUser;
+    if (avatar) {
+      const formData = new FormData();
+      formData.append("avatar", avatar);
+      await axios.patch(`${API_BASE_URL}/users/avatar`, formData, {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    }
+  } catch (error) {
+    console.error("Error updating user:", error.response?.data || error);
+    throw new Error(error.response?.data?.message || error.message);
+  }
 }

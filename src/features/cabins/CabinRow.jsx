@@ -53,22 +53,36 @@ function CabinRow({ cabin }) {
   const { isCreating, CreateCabin } = useCreateCabin();
 
   const {
-    id: CabinId,
-    name,
-    maxCapacity,
-    regularPrice,
+    _id: CabinId,
+    cabinNum: name,
+    capacity: maxCapacity,
+    price: regularPrice,
     discount,
-    image,
+    cabinImage: image,
     description,
   } = cabin;
 
-  function handleDuplicate() {
+  async function handleDuplicate() {
+    let imageFile = image; // Default to URL
+
+    // If image is a URL, fetch it and convert it into a File
+    if (typeof image === "string") {
+      try {
+        const response = await fetch(image);
+        const blob = await response.blob();
+        imageFile = new File([blob], "cabinImage.jpg", { type: blob.type });
+      } catch (error) {
+        console.error("Error fetching image file:", error);
+        return;
+      }
+    }
+
     CreateCabin({
       name: `Copy of ${name}`,
       maxCapacity,
       regularPrice,
       discount,
-      image,
+      image: imageFile,
       description,
     });
   }
