@@ -3,10 +3,6 @@ import toast from "react-hot-toast";
 import { updateCurrentUser } from "../../services/apiAuth";
 
 export function useUpdateUser() {
-
-  //TODO write custom user update logic
-  
-
   const queryClient = useQueryClient();
 
   const { isLoading: isUpdating, mutate: updateUser } = useMutation({
