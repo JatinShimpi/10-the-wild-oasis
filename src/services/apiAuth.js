@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "../utils/constants";
+import supabase, { supabaseUrl } from "./supabase";
 import axios from "axios";
 
 
